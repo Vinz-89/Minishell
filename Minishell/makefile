@@ -15,8 +15,9 @@ NAME = minishell
 CC = cc
 CFLAGS = -Wall -Wextra #-Werror -g3 #-fsanitize=address
 # LFLAGS = -lmlx -lXext -lX11 -lm
-RM = rm -rf
+READLINE = -lreadline
 
+RM = rm -rf
 
 SRCS = main.c
 SRCS_UTILS = utils.c
@@ -30,7 +31,7 @@ OBJ = $(SRCS_:.c=.o)
 all: $(NAME)
 
 $(NAME): $(OBJ) $(LIBDIR)/$(LIB)
-	$(CC) $(CFLAGS) -o $(NAME) $(OBJ) $(LIBDIR)/$(LIB) $(LFLAGS)
+	$(CC) $(CFLAGS) -o $(NAME) $(OBJ) $(LIBDIR)/$(LIB) $(READLINE)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -45,5 +46,10 @@ clean:
 fclean: clean
 	$(RM) $(NAME)
 	$(MAKE) -C $(LIBDIR) fclean
+
+test: $(NAME)
+	@echo "---------------------------- $(NAME) ----------------------------"
+	@./$(NAME)
+
 
 re: fclean all
