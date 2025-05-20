@@ -13,14 +13,14 @@
 NAME = minishell
 
 CC = cc
-CFLAGS = -Wall -Wextra #-Werror -g3 #-fsanitize=address
+CFLAGS = -g #-Wall -Wextra -Werror -g3 -fsanitize=address
 # LFLAGS = -lmlx -lXext -lX11 -lm
 READLINE = -lreadline
 
 RM = rm -rf
 
-SRCS = main.c
-SRCS_UTILS = utils.c
+SRCS = minishell.c
+SRCS_UTILS = util.c split_utils.c builtin_util.c
 SRCS_ = $(addprefix srcs/, $(SRCS)) $(addprefix srcs/utils/, $(SRCS_UTILS))
 
 LIBDIR = Lib

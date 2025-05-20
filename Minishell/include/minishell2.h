@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   minishell.h                                        :+:      :+:    :+:   */
+/*   minishell2.h                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: vwautier <vwautier@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/25 12:17:29 by vwautier          #+#    #+#             */
-/*   Updated: 2025/05/16 22:46:08 by vwautier         ###   ########.fr       */
+/*   Updated: 2025/05/19 18:52:52 by vwautier         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@
 # include <sys/wait.h>
 # include <readline/readline.h>
 # include <readline/history.h>
-# include "libft/libft.h"
+# include "../Lib/Libft/libft.h"
 
 
 typedef enum e_tokens
@@ -50,5 +50,7 @@ void	mgetcwd(char *buffer, size_t size);
 void	printshell();
 
 void view_split(char **argv);
+char **new_split(char **split, char *str);
+void free_split(char **split);
 
 #endif

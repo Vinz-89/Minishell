@@ -6,11 +6,11 @@
 /*   By: vwautier <vwautier@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/25 12:19:14 by vwautier          #+#    #+#             */
-/*   Updated: 2025/05/16 22:47:16 by vwautier         ###   ########.fr       */
+/*   Updated: 2025/05/20 15:25:44 by vwautier         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "minishell.h"
+#include "../include/minishell2.h"
 
 /*
 static char *read_line_shell(void)
@@ -119,15 +119,6 @@ void fill_token(t_list **lst, char *tokens)
 }
 */
 
-int size_split(char **split)
-{
-	int i;
-
-	i = 0;
-	while(split && split[i])
-		i++;
-	return(i);
-}
 
 void exec_token(char **split)
 {
@@ -160,20 +151,6 @@ void exec_token(char **split)
 
 }
 
-void view_split(char **argv)
-{
-	int i;
-
-	if(!argv || !*argv)
-		return ;
-	i = 0;
-	while(argv[i])
-	{
-		printf("%s\n",argv[i++]);
-		if(!argv[i])
-			printf("(NULL)");
-	}
-}
 static void	handler(int sig)
 {
 	printf("Dedan");
@@ -229,12 +206,9 @@ int join_prompt_pwd(t_shell *shell, char *str)
 		perror("(pwd error)$> ");
 		return(0);
 	}
-	tmp = shell->pwd;
-	shell->pwd = ft_strjoin(shell->pwd, str);
-	if(!shell->pwd)
-		return(0);
-	free(tmp);
-	tmp = NULL;
+	tmp = ft_strjoin(shell->pwd, str);
+	free(shell->pwd);
+	shell->pwd = tmp;
 	return (1);
 }
 
@@ -242,7 +216,6 @@ int main(void)
 {
 	t_shell *shell;
 	struct sigaction sa;
-	char *line;
 	char **argv;
 	int	status;
 	//t_list **tokens;
@@ -286,7 +259,6 @@ int main(void)
 	//printf("%d",echo);
 	printshell();
 	printf("Pid : %d\n",getpid());
-	shell->line = line;
 	while(1)
 	{
 
@@ -295,7 +267,7 @@ int main(void)
 		//free(pwd);
 		//pwd = NULL;
 		//join_prompt_pwd(shell, "$> ");
-		line = readline(shell->pwd);
+		shell->line = readline(shell->pwd);
 		/*
 		if(!ft_strncmp("cd",line,ft_strlen("cd")))
 		{
@@ -303,30 +275,44 @@ int main(void)
 			//printf("%d\n",str_token(line));
 		}
 		*/
-		if(!line)
+		if(!shell->line)
 		{
 			write(1,"exit\n",5);
 			if(shell->pwd)
+			{
 				free(shell->pwd);
-			shell->pwd = NULL;
-
-			
+				shell->pwd = NULL;
+			}
+			if(shell->env)
+			{
+				free(shell->line);
+				shell->line = NULL;
+			}
+			if(shell->env)
+			{
+				free_split(shell->env);
+				shell->env = NULL;
+			}
+			if(shell->argv)
+			{
+				free_split(shell->argv);
+				shell->argv = NULL;
+			}
 			if(shell)
 				free(shell);
 			shell = NULL;
 			break;
 		}
 
-		if(line && *line)
-			add_history(line);
-		argv = ft_split(line,' ');
+		if(shell->line && *shell->line)
+			add_history(shell->line);
+		shell->argv = ft_split(shell->line,' ');
 		//view_split(argv);
-		free(line);
-		line = NULL;
-		builtin_handler(shell, argv);		
-		free_split(argv);
-		//free(argv);
-		argv = NULL;
+		builtin_handler(shell,shell->argv);		
+		free_split(shell->argv);
+		shell->argv = NULL;
+		free(shell->line);
+		shell->line = NULL;
 	}
 	clean_readline();
 	return(EXIT_SUCCESS);

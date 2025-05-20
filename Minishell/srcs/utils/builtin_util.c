@@ -6,11 +6,11 @@
 /*   By: vwautier <vwautier@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/08 22:24:55 by vwautier          #+#    #+#             */
-/*   Updated: 2025/05/16 13:35:07 by vwautier         ###   ########.fr       */
+/*   Updated: 2025/05/20 15:46:42 by vwautier         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "minishell.h"
+#include "../../include/minishell2.h"
 
 int str_token(char *token)
 {
@@ -38,26 +38,6 @@ int str_token(char *token)
 	free(tmp);
 	free(tmp1);
 	return(-1);
-}
-
-void free_split(char **split)
-{
-	int i;
-
-	if(!split || !*split)
-		return ;
-
-	i = 0;
-
-	while(split[i])
-	{
-		free(split[i]);
-		split[i] = NULL;
-		i++;
-	}
-
-	free(split);
-	
 }
 
 static char *ptr_binpath(char **split)
@@ -104,6 +84,8 @@ int argc_split(char **argv)
 {
 	int i;
 
+	if(!argv || !*argv)
+		return(0);
 	i = 0;
 	while(argv[i])
 		i++;
@@ -166,9 +148,106 @@ void echo_handler(char *path, int argc, char **argv)
 	
 }
 
-void export_handler(char *path, int argc, char **argv)
+char *sanitize_export(t_shell* shell)
+{
+	char *tmp;
+	int i;
+
+	i = 0;
+	while(shell->line[i] && shell->line[i] != ' ')
+		i++;
+	while(shell->line[i] && shell->line[i] == ' ')
+		i++;
+	tmp = ft_strdup(&shell->line[i]);
+	if(!tmp)
+	{
+		perror("Probleme malloc");
+		return(NULL); 
+	}
+	free(shell->line);
+	shell->line = tmp;
+}
+int var_checker(t_shell *shell, char *var)
+{
+	int i;
+	int quotecount;
+	char *tmp;
+
+	tmp = NULL;
+
+	if (!var || !((var[0] >= 'a' && var[0] <= 'z') || (var[0] >= 'A' && var[0] <= 'Z') || (var[0] == '_')))
+        return(0);
+	i = 1;
+	while(var[i] && var[i] != '=')
+	{
+		if(!((var[i] >= 'a' && var[i] <= 'z') || (var[i] >= 'A' && var[i] <= 'Z') || (var[i] >= '0' && var[i] <= '9') || (var[i] == '_')))
+			return(0);
+		i++;
+	}
+	if(!var[i] || var[i++] != '=')
+	{
+		tmp = ft_strdup(var);
+		free(shell->line);
+		shell->line = tmp;
+		return(0);
+	}
+	quotecount = 0;
+	if(var[i] == '\0' || var[i] == ' ')
+	{
+		var[i] = '\0';
+		tmp = ft_strjoin(var,"\"\"");
+		free(shell->line);
+		shell->line = tmp;
+		return(0);
+	}
+	while(var[i])
+	{
+		if(var[i] == 34)
+			quotecount++;
+		if((!(var[i] >= 33 && var[i] <= 126) || (var[i + 1] == '\0' && quotecount % 2 != 0)))
+			return(0);
+		i++;
+	}
+	//printf("Apres la boucle %c\n",var[i]);
+	sanitize_export(shell);
+	return(1);
+}
+
+
+
+void export_handler(t_shell *shell, char *path, int argc, char **argv)
 {
 	int status;
+	char *var;
+	int checker;
+	char *env_str;
+
+	//if(!shell->line)
+		//return ;
+
+	if(argc == 1)
+	{
+		//Print env function
+		/*declare -x t
+		declare -x tr_uc="machin"
+		declare -x truc=""*/
+	}
+		
+	status = 0;
+	checker = 0;
+	while(shell->line[status] && shell->line[status] != ' ')
+		status++;
+	while(shell->line[status] == ' ')
+		status++;
+	checker = var_checker(shell, &shell->line[status]);
+	env_str = ft_strdup(shell->line);
+	if(!env_str)
+		return;
+	shell->env = new_split(shell->env,env_str);
+	view_split(shell->env);
+	free(env_str);
+
+	
 
 	//char *envp[] = {"truc=valeur", NULL};
 
@@ -183,10 +262,11 @@ void export_handler(char *path, int argc, char **argv)
 	//view_split(argv);
 	//sanitize_string(argc, argv);
 	//view_split(argv);
+	/*
 	if(fork() == 0)
 		execve(path,argv, NULL);
     wait(&status);
-	
+	*/
 }
 
 void builtin_handler(t_shell *shell, char **argv)
@@ -208,8 +288,8 @@ void builtin_handler(t_shell *shell, char **argv)
 	if(token == t_echo)
 		echo_handler(path, argc, argv);
 	if(token == t_export)
-		export_handler(path, argc, argv);
-	if(token == t_env)
+		export_handler(shell, path, argc, argv);
+	//if(token == t_env)
 	/*
 	if(fork() == 0)
 		execve(path,argv, NULL);
